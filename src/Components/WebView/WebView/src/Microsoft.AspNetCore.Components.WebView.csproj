@@ -40,8 +40,22 @@
       Condition="'$(BuildNodeJS)' != 'false' and '$(BuildingInsideVisualStudio)' != 'true'" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <!-- Microsoft.AspNetCore.Components.Web.JS.npmproj always capitalizes the directory name. -->
+    <BlazorWebViewJSFile
+        Condition=" '$(Configuration)' == 'Debug' ">..\..\..\Web.JS\dist\Debug\blazor.webview.js</BlazorWebViewJSFile>
+    <BlazorWebViewJSFile
+        Condition=" '$(Configuration)' != 'Debug' ">..\..\..\Web.JS\dist\Release\blazor.webview.js</BlazorWebViewJSFile>
+  </PropertyGroup>
+
   <ItemGroup>
-    <EmbeddedResource Include="..\..\..\Web.JS\dist\$(Configuration)\blazor.webview.js" Link="Resources\blazor.webview.js" />
+    <EmbeddedResource Include="$(BlazorWebViewJSFile)" Link="Resources\blazor.webview.js" />
   </ItemGroup>
 
+  <!-- blazor.webview.js should exist after Microsoft.AspNetCore.Components.Web.JS.npmproj builds. -->
+  <Target Name="_CheckBlazorWebViewJSPath" BeforeTargets="GenerateNuspec" DependsOnTargets="ResolveProjectReferences"
+      Condition=" '$(IsPackable)' == 'true' ">
+    <Error Text="'$(BlazorWebViewJSFile)' does not exist. Enable NodeJS to pack this project."
+        Condition=" !EXISTS('$(BlazorWebViewJSFile)') " />
+  </Target>
 </Project>
